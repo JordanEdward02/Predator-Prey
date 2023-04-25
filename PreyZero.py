@@ -1,7 +1,12 @@
 # Model for the prey that have no  communication
-# Model of the predators within our environment
 import random
 import math
+import Population
+from threading import Timer
+
+WANDERING = 0
+FLEEING = 1
+REPRODUCING = 2
 
 class Prey():
     count = 0
@@ -10,13 +15,40 @@ class Prey():
         self.x = random.randint(10,990)
         self.y = random.randint(10,990)
         self.theta = random.uniform(0.0,2.0*math.pi)
-        self.energy = 100
+        self.reproduceTimer = 0
         self.canvas = canvas
         self.name = name + str(Prey.count)
         Prey.count += 1
+        self.state = WANDERING
+        self.reproduceCount = 0
         self.view = [0]*9 # Are we having movmenet based on proximity or visibility?
 
         
+
+    def move(self):
+        # Reproduce counter always goes up
+        self.reproduceTimer += 1
+        if self.reproduceTimer == 100:
+            self.state = REPRODUCING
+            return
+
+        # Wander around
+        if (self.state == WANDERING):
+            return
+        
+        # Spawn new and then stay still to reproduce
+        if (self.state == REPRODUCING):
+            self.reproduceCount += 1
+            if self.reproduceCount > 10:
+                pops = Population.Populations.getPopulations(self.canvas)
+                newPrey = Prey(self.canvas, "prey")
+                newPrey.setLocation(self.x+(4*random.randint(-1,1)), self.y+(4*random.randint(-1,1)))
+                pops.addPrey(newPrey)
+                self.reproduceTimer = 0
+                self.reproduceCount = 0
+                self.state = WANDERING
+
+
     def draw(self):
         canvas = self.canvas
         canvas.delete(self.name)
@@ -34,3 +66,7 @@ class Prey():
             self.y+6*math.sin(self.theta)
         ]
         canvas.create_line(line_bounds,fill="green",tags=self.name)
+
+    def setLocation(self, x, y):
+        self.x = x
+        self.y = y
