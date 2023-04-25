@@ -24,6 +24,7 @@ class Prey():
         Prey.count += 1
         self.state = WANDERING
         self.reproduceCount = 0
+        self.reproduceDelay = random.randint(80,120)
         self.view = [0]*9 # Are we having movmenet based on proximity or visibility?
 
         
@@ -31,7 +32,7 @@ class Prey():
     def move(self):
         # Reproduce counter always goes up
         self.reproduceTimer += 1
-        if self.reproduceTimer == 100:
+        if self.reproduceTimer == self.reproduceDelay:
             self.state = REPRODUCING
             return
 

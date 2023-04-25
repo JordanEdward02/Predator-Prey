@@ -3,8 +3,12 @@ import tkinter as tk
 import Predator
 import PreyZero   
 import Population  
+import pandas as pd
 
-def logicLoop(canvas):
+GlobalPrey = []
+GlobalPred = []
+
+def logicLoop(window, canvas, numberOfMoves):
     # Main logic loop that renders every object. Objects draw themselves so once we remove the graphics, do this in their classes.
     pops = Population.Populations.getPopulations(canvas)
     for pred in pops.allPred():
@@ -18,7 +22,17 @@ def logicLoop(canvas):
 
     for p in pops.allPrey():
         p.draw()
-    canvas.after(50,logicLoop, canvas)
+    
+    GlobalPrey.append(len(pops.allPrey()))
+    GlobalPred.append(len(pops.allPred()))
+
+    numberOfMoves += 1
+    if (numberOfMoves > 1000):
+        frame = pd.DataFrame({"Prey": GlobalPrey, "Predators": GlobalPred})
+        frame.to_excel("data.xlsx")
+        window.destroy()
+        return
+    canvas.after(50,logicLoop, window, canvas, numberOfMoves)
 
 def initialise(window):
     window.resizable(False,False)
@@ -31,15 +45,17 @@ def createCreatures(canvas):
     for i in range(20):
         pops.addPredator(Predator.Predator(canvas, "predator"))
         
-    for i in range(100):
+    for i in range(200):
         pops.addPrey(PreyZero.Prey(canvas, "prey"))
 
 def main():
     window = tk.Tk()
     canvas = initialise(window)
 
-    pops = createCreatures(canvas)
-    logicLoop(canvas)
+    createCreatures(canvas)
+    numberOfMoves = 0
+    logicLoop(window, canvas, numberOfMoves)
 
     window.mainloop()
+
 main()

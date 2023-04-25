@@ -1,4 +1,5 @@
 # Class to maintain the populations over time of the predators and prey
+from matplotlib import pyplot as plt
 
 class Populations():
     this = None    
