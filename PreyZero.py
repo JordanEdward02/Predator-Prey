@@ -8,6 +8,9 @@ WANDERING = 0
 FLEEING = 1
 REPRODUCING = 2
 
+WALK_SPEED = 3
+ROTATION_SPEED = 5
+
 class Prey():
     count = 0
 
@@ -32,11 +35,11 @@ class Prey():
             self.state = REPRODUCING
             return
 
-        # Wander around
         if (self.state == WANDERING):
+            self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
+            self.theta += random.randint(-ROTATION_SPEED, ROTATION_SPEED) * math.pi/180
             return
         
-        # Spawn new and then stay still to reproduce
         if (self.state == REPRODUCING):
             self.reproduceCount += 1
             if self.reproduceCount > 10:
@@ -52,6 +55,7 @@ class Prey():
     def draw(self):
         canvas = self.canvas
         canvas.delete(self.name)
+        # Body
         bounds = [ 
                    self.x-2,
                    self.y-2,
@@ -59,6 +63,8 @@ class Prey():
                    self.y+2
         ]
         canvas.create_oval(bounds, fill="green", tags=self.name)
+
+        # Head
         line_bounds = [
             self.x,
             self.y,
@@ -68,5 +74,16 @@ class Prey():
         canvas.create_line(line_bounds,fill="green",tags=self.name)
 
     def setLocation(self, x, y):
+        if (x > 1000):
+            x -= 1000
+        if (x<0):
+            x += 1000
+        if (y > 1000):
+            y -= 1000
+        if (y<0):
+            y += 1000
         self.x = x
         self.y = y
+
+    def delete(self):
+        self.canvas.delete(self.name)

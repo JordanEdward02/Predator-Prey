@@ -20,7 +20,6 @@ class Populations():
         
     def addPrey(self, prey):
         self.preyPop.append(prey)
-        print("NEW PREY COUNT: " + str(len(self.preyPop)))
         
     def destoryPredator(self, pred):
         self.predatorPop.remove(pred)

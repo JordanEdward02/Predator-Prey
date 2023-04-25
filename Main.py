@@ -31,7 +31,7 @@ def createCreatures(canvas):
     for i in range(20):
         pops.addPredator(Predator.Predator(canvas, "predator"))
         
-    for i in range(1):
+    for i in range(100):
         pops.addPrey(PreyZero.Prey(canvas, "prey"))
 
 def main():
