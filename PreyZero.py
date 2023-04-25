@@ -27,3 +27,10 @@ class Prey():
                    self.y+2
         ]
         canvas.create_oval(bounds, fill="green", tags=self.name)
+        line_bounds = [
+            self.x,
+            self.y,
+            self.x+6*math.cos(self.theta),
+            self.y+6*math.sin(self.theta)
+        ]
+        canvas.create_line(line_bounds,fill="green",tags=self.name)

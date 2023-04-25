@@ -26,6 +26,7 @@ class Populations:
         
 
 def logicLoop(canvas, predators, prey):
+    # Main logic loop that renders every object. Objects draw themselves so once we remove the graphics, do this in their classes.
 
     for pred in predators:
         pred.draw()
