@@ -5,6 +5,8 @@ import PreyZero
 import Population  
 import pandas as pd
 
+CANVAS_SIZE = 1000
+
 GlobalPrey = []
 GlobalPred = []
 
@@ -41,7 +43,7 @@ def logicLoop(window, canvas, numberOfMoves):
 
 def renderlessLoop(numberOfMoves):
     pops = Population.Populations.getPopulations()
-    while(numberOfMoves < 3000 and len(pops.allPred()) > 0 and len(pops.allPrey()) > 0):
+    while(numberOfMoves < 6000 and len(pops.allPred()) > 0 and len(pops.allPrey()) > 0):
         for pred in pops.allPred():
             pred.move()
 
@@ -51,22 +53,21 @@ def renderlessLoop(numberOfMoves):
         GlobalPrey.append(len(pops.allPrey()))
         GlobalPred.append(len(pops.allPred()))
 
-        print(str(len(pops.allPrey())) + " || " + str(len(pops.allPred())))
         numberOfMoves += 1
     frame = pd.DataFrame({"Prey": GlobalPrey, "Predators": GlobalPred})
     frame.to_excel("data.xlsx")
 
 def initialise(window):
     window.resizable(False,False)
-    canvas = tk.Canvas(window,width=1000,height=1000)
+    canvas = tk.Canvas(window,width=CANVAS_SIZE,height=CANVAS_SIZE)
     canvas.pack()
     return canvas
 
 def createCreatures(canvas):
     pops = Population.Populations.getPopulations()
-    for i in range(30):
+    for i in range(10):
         pops.addPredator(Predator.Predator(canvas, "predator"))
-    for i in range(500):
+    for i in range(40):
         pops.addPrey(PreyZero.Prey(canvas, "prey"))
 
 def main(rendered):
@@ -84,4 +85,4 @@ def main(rendered):
         numberOfMoves = 0
         renderlessLoop(numberOfMoves)
 
-main(rendered=False)
+main(rendered=True)

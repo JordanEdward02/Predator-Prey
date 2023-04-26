@@ -4,24 +4,21 @@ import math
 import Population
 from threading import Timer
 
+CANVAS_SIZE = 1000
 
-"""
-Make the canvas size a parameter?
-
-"""
 WANDERING = 0
 FLEEING = 1
 REPRODUCING = 2
 
-WALK_SPEED = 2
+WALK_SPEED = 4
 ROTATION_SPEED = 10
 
 class Prey():
     count = 0
 
     def __init__(self,canvas,name):
-        self.x = random.randint(10,1990)
-        self.y = random.randint(10,1990)
+        self.x = random.randint(10,CANVAS_SIZE-10)
+        self.y = random.randint(10,CANVAS_SIZE-10)
         self.theta = random.uniform(0.0,2.0*math.pi)
         self.reproduceTimer = 0
         self.canvas = canvas
@@ -29,7 +26,7 @@ class Prey():
         Prey.count += 1
         self.state = WANDERING
         self.reproduceCount = 0
-        self.reproduceDelay = random.randint(80,120)
+        self.reproduceDelay = random.randint(160,200) - len(Population.Populations.getPopulations().allPrey())/10
 
     def move(self):
         pops = Population.Populations.getPopulations()
@@ -37,7 +34,7 @@ class Prey():
     
         # Reproduce counter always goes up
         self.reproduceTimer += 1
-        if self.reproduceTimer == self.reproduceDelay: self.state = REPRODUCING
+        if self.reproduceTimer > self.reproduceDelay: self.state = REPRODUCING
 
         if (self.state == FLEEING):
             if (len(pops.allPred()) == 0): return
@@ -76,6 +73,7 @@ class Prey():
                 pops.addPrey(newPrey)
                 self.reproduceTimer = 0
                 self.reproduceCount = 0
+                self.reproduceDelay = random.randint(160,200) - len(Population.Populations.getPopulations().allPrey())/10
                 self.state = WANDERING
 
     def distanceTo(self, other):
@@ -92,21 +90,21 @@ class Prey():
         for prey in pops.allPrey():
             if prey == self:
                 continue
-            if self.distanceTo(prey) < 12:
+            if self.distanceTo(prey) < 24:
                 ang = math.atan2(prey.y - self.y, prey.x - self.x)
                 self.setLocation(self.x-2*WALK_SPEED*math.cos(ang),self.y-2*WALK_SPEED*math.sin(ang))
                 self.theta = (ang + math.pi)
 
     def draw(self):
-        """
+        
         canvas = self.canvas
         canvas.delete(self.name)
         # Body
         bounds = [ 
-                   self.x-6,
-                   self.y-6,
-                   self.x+6,
-                   self.y+6
+                   self.x-12,
+                   self.y-12,
+                   self.x+12,
+                   self.y+12
         ]
         canvas.create_oval(bounds, fill="green", tags=self.name)
 
@@ -114,21 +112,21 @@ class Prey():
         line_bounds = [
             self.x,
             self.y,
-            self.x+9*math.cos(self.theta),
-            self.y+9*math.sin(self.theta)
+            self.x+16*math.cos(self.theta),
+            self.y+16*math.sin(self.theta)
         ]
         canvas.create_line(line_bounds,fill="green",tags=self.name)
-        """
+        
 
     def setLocation(self, x, y):
-        if (x > 2000):
-            x -= 2000
+        if (x > CANVAS_SIZE):
+            x -= CANVAS_SIZE
         if (x<0):
-            x += 2000
-        if (y > 2000):
-            y -= 2000
+            x += CANVAS_SIZE
+        if (y > CANVAS_SIZE):
+            y -= CANVAS_SIZE
         if (y<0):
-            y += 2000
+            y += CANVAS_SIZE
         self.x = x
         self.y = y
 

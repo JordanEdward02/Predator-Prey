@@ -3,21 +3,23 @@ import random
 import math
 import Population
 
+CANVAS_SIZE = 1000
+
 HUNTING = 0
 REPRODUCING = 1
 RECOVERY = 2
 
-WALK_SPEED = 3
+WALK_SPEED = 6
 ROTATION_SPEED = 10
 
 class Predator():
     count = 0
 
     def __init__(self,canvas,name):
-        self.x = random.randint(10,1990)
-        self.y = random.randint(10,1990)
+        self.x = random.randint(10,CANVAS_SIZE-10)
+        self.y = random.randint(10,CANVAS_SIZE-10)
         self.theta = random.uniform(0.0,2.0*math.pi)
-        self.energy = 100
+        self.energy = random.randint(70,130) + 60 - len(Population.Populations.getPopulations().allPred())*3
         self.canvas = canvas
         self.name = name + str(Predator.count)
         Predator.count += 1
@@ -72,22 +74,22 @@ class Predator():
             newPred.theta = self.theta
             pops.addPredator(newPred)
             self.state = HUNTING
-            self.energy = 100
+            self.energy = random.randint(70,130) + 60 - len(Population.Populations.getPopulations().allPred())*3
             
                     
     def collisions(self):
         pops = Population.Populations.getPopulations()
         for prey in pops.allPrey():
             # Eat the prey if within range
-            if self.distanceTo(prey) < 14:
-                self.energy += 35
+            if self.distanceTo(prey) < 24:
+                self.energy += random.randint(30,50) + 60 - len(Population.Populations.getPopulations().allPred())*3
                 pops.destoryPrey(prey)
                 prey.delete()
                 return
         for pred in pops.allPred():
             if pred == self:
                 continue
-            if self.distanceTo(pred) < 16:
+            if self.distanceTo(pred) < 24:
                 ang = math.atan2(pred.y - self.y, pred.x - self.x)
                 self.setLocation(self.x-WALK_SPEED*math.cos(ang),self.y-WALK_SPEED*math.sin(ang))
                 self.theta = ang+math.pi
@@ -104,15 +106,15 @@ class Predator():
 
 
     def draw(self):
-        """
+        
         canvas = self.canvas
         canvas.delete(self.name)
         # Body
         bounds = [ 
-                   self.x-8,
-                   self.y-8,
-                   self.x+8,
-                   self.y+8
+                   self.x-12,
+                   self.y-12,
+                   self.x+12,
+                   self.y+12
         ]
         canvas.create_oval(bounds, fill="red", tags=self.name)
 
@@ -120,20 +122,20 @@ class Predator():
         line_bounds = [
             self.x,
             self.y,
-            self.x+12*math.cos(self.theta),
-            self.y+12*math.sin(self.theta)
+            self.x+16*math.cos(self.theta),
+            self.y+16*math.sin(self.theta)
         ]
         canvas.create_line(line_bounds,fill="red",tags=self.name)
-        """
+        
 
     def setLocation(self, x, y):
-        if (x > 2000):
-            x -= 2000
+        if (x > CANVAS_SIZE):
+            x -= CANVAS_SIZE
         if (x<0):
-            x += 2000
-        if (y > 2000):
-            y -= 2000
+            x += CANVAS_SIZE
+        if (y > CANVAS_SIZE):
+            y -= CANVAS_SIZE
         if (y<0):
-            y += 2000
+            y += CANVAS_SIZE
         self.x = x
         self.y = y
