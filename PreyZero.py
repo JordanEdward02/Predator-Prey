@@ -4,19 +4,24 @@ import math
 import Population
 from threading import Timer
 
+
+"""
+Make the canvas size a parameter?
+
+"""
 WANDERING = 0
 FLEEING = 1
 REPRODUCING = 2
 
 WALK_SPEED = 2
-ROTATION_SPEED = 5
+ROTATION_SPEED = 10
 
 class Prey():
     count = 0
 
     def __init__(self,canvas,name):
-        self.x = random.randint(10,990)
-        self.y = random.randint(10,990)
+        self.x = random.randint(10,1990)
+        self.y = random.randint(10,1990)
         self.theta = random.uniform(0.0,2.0*math.pi)
         self.reproduceTimer = 0
         self.canvas = canvas
@@ -27,7 +32,7 @@ class Prey():
         self.reproduceDelay = random.randint(80,120)
 
     def move(self):
-        pops = Population.Populations.getPopulations(self.canvas)
+        pops = Population.Populations.getPopulations()
 
     
         # Reproduce counter always goes up
@@ -83,7 +88,7 @@ class Prey():
         return returnTheta
     
     def collisions(self):
-        pops = Population.Populations.getPopulations(self.canvas)
+        pops = Population.Populations.getPopulations()
         for prey in pops.allPrey():
             if prey == self:
                 continue
@@ -116,16 +121,16 @@ class Prey():
         """
 
     def setLocation(self, x, y):
-        if (x > 1000):
-            x -= 1000
+        if (x > 2000):
+            x -= 2000
         if (x<0):
-            x += 1000
-        if (y > 1000):
-            y -= 1000
+            x += 2000
+        if (y > 2000):
+            y -= 2000
         if (y<0):
-            y += 1000
+            y += 2000
         self.x = x
         self.y = y
 
     def delete(self):
-        self.canvas.delete(self.name)
+        if (self.canvas != None): self.canvas.delete(self.name)

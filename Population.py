@@ -3,17 +3,16 @@ from matplotlib import pyplot as plt
 
 class Populations():
     this = None    
-    def __init__(self,canvas):
+    def __init__(self):
         # Count the populations of the prey and predators as we run the simulation. Get these to be plot in real time.
         self.preyPop = []
         self.predatorPop = []
-        self.canvas = canvas
         # Needs the item to count to be plotted on the graph
 
         
-    def getPopulations(canvas):
+    def getPopulations():
         if Populations.this == None:
-            Populations.this = Populations(canvas)
+            Populations.this = Populations()
         return Populations.this
         
     def destoryPrey(self, prey):

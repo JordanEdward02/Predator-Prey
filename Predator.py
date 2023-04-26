@@ -8,17 +8,16 @@ REPRODUCING = 1
 RECOVERY = 2
 
 WALK_SPEED = 3
-ROTATION_SPEED = 3
+ROTATION_SPEED = 10
 
 class Predator():
     count = 0
 
     def __init__(self,canvas,name):
-        self.x = random.randint(10,990)
-        self.y = random.randint(10,990)
+        self.x = random.randint(10,1990)
+        self.y = random.randint(10,1990)
         self.theta = random.uniform(0.0,2.0*math.pi)
-        self.energy = 200
-        self.reproduceCount = 0
+        self.energy = 100
         self.canvas = canvas
         self.name = name + str(Predator.count)
         Predator.count += 1
@@ -26,12 +25,12 @@ class Predator():
 
 
     def move(self):
-        pops = Population.Populations.getPopulations(self.canvas)
+        pops = Population.Populations.getPopulations()
 
         self.energy -= 1
         if (self.energy<0):
             pops.destoryPredator(self)
-            self.canvas.delete(self.name)
+            if (self.canvas != None): self.canvas.delete(self.name)
             return
         
         if (self.state == RECOVERY):
@@ -40,7 +39,7 @@ class Predator():
                 self.state = HUNTING
 
         if (self.state == HUNTING):
-            if self.energy > 500:
+            if self.energy > 200:
                 self.state = REPRODUCING
                 return
             
@@ -67,33 +66,31 @@ class Predator():
             return
         
         if (self.state == REPRODUCING):
-            self.reproduceCount += 1
-            if self.reproduceCount > 10:
-                pops = Population.Populations.getPopulations(self.canvas)
-                newPred = Predator(self.canvas, "predator")
-                newPred.setLocation(self.x+(12*math.cos(self.theta)), self.y+(12*math.sin(self.theta)))
-                newPred.theta = self.theta
-                pops.addPredator(newPred)
-                self.reproduceCount = 0
-                self.state = HUNTING
-                self.energy = 200
+            pops = Population.Populations.getPopulations()
+            newPred = Predator(self.canvas, "predator")
+            newPred.setLocation(self.x+(12*math.cos(self.theta)), self.y+(12*math.sin(self.theta)))
+            newPred.theta = self.theta
+            pops.addPredator(newPred)
+            self.state = HUNTING
+            self.energy = 100
             
                     
     def collisions(self):
-        pops = Population.Populations.getPopulations(self.canvas)
+        pops = Population.Populations.getPopulations()
         for prey in pops.allPrey():
             # Eat the prey if within range
-            if self.distanceTo(prey) < 10:
-                self.energy += 60
+            if self.distanceTo(prey) < 14:
+                self.energy += 35
                 pops.destoryPrey(prey)
                 prey.delete()
                 return
         for pred in pops.allPred():
             if pred == self:
                 continue
-            if self.distanceTo(pred) < 14:
-                ang = self.angleTo(prey)
+            if self.distanceTo(pred) < 16:
+                ang = math.atan2(pred.y - self.y, pred.x - self.x)
                 self.setLocation(self.x-WALK_SPEED*math.cos(ang),self.y-WALK_SPEED*math.sin(ang))
+                self.theta = ang+math.pi
         
 
     def distanceTo(self, other):
@@ -130,13 +127,13 @@ class Predator():
         """
 
     def setLocation(self, x, y):
-        if (x > 1000):
-            x -= 1000
+        if (x > 2000):
+            x -= 2000
         if (x<0):
-            x += 1000
-        if (y > 1000):
-            y -= 1000
+            x += 2000
+        if (y > 2000):
+            y -= 2000
         if (y<0):
-            y += 1000
+            y += 2000
         self.x = x
         self.y = y
