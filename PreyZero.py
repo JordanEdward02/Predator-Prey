@@ -26,7 +26,7 @@ class Prey():
         Prey.count += 1
         self.state = WANDERING
         self.reproduceCount = 0
-        self.reproduceDelay = random.randint(160,200) - len(Population.Populations.getPopulations().allPrey())/10
+        self.reproduceDelay = random.randint(160,200) - (40 - len(Population.Populations.getPopulations().allPrey())/10)
 
     def move(self):
         pops = Population.Populations.getPopulations()
