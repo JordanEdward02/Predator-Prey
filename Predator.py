@@ -5,9 +5,10 @@ import Population
 
 HUNTING = 0
 REPRODUCING = 1
+RECOVERY = 2
 
-WALK_SPEED = 4
-ROTATION_SPEED = 8
+WALK_SPEED = 3
+ROTATION_SPEED = 3
 
 class Predator():
     count = 0
@@ -16,34 +17,42 @@ class Predator():
         self.x = random.randint(10,990)
         self.y = random.randint(10,990)
         self.theta = random.uniform(0.0,2.0*math.pi)
-        self.energy = 100
+        self.energy = 200
         self.reproduceCount = 0
         self.canvas = canvas
         self.name = name + str(Predator.count)
         Predator.count += 1
         self.state = HUNTING
-        self.view = [0]*9 # Are we having movmenet based on proximity or visibility?
 
 
     def move(self):
         pops = Population.Populations.getPopulations(self.canvas)
+
+        self.energy -= 1
+        if (self.energy<0):
+            pops.destoryPredator(self)
+            self.canvas.delete(self.name)
+            return
+        
+        if (self.state == RECOVERY):
+            self.preyCount += 1
+            if self.preyCount > 10:
+                self.state = HUNTING
+
         if (self.state == HUNTING):
-            if self.energy > 200 :
+            if self.energy > 500:
                 self.state = REPRODUCING
                 return
-            self.energy -= 1
-            if (self.energy<0):
-                pops.destoryPredator(self)
-                self.canvas.delete(self.name)
-                return
-            # Change this to move towards nearby prey
+            
+            # Find the nearest prey and move towards it
+            if (len(pops.allPrey()) == 0): return
             target = pops.allPrey()[0]
             closestDist = 1000
             for prey in pops.allPrey():
                 if (self.distanceTo(prey) < closestDist):
                     target = prey
                     closestDist = self.distanceTo(prey)
-            if (closestDist > 40):
+            if (closestDist > 50):
                 self.theta += math.radians(random.randint(-ROTATION_SPEED, ROTATION_SPEED))
             else:
                 ang = self.angleTo(target)
@@ -62,22 +71,29 @@ class Predator():
             if self.reproduceCount > 10:
                 pops = Population.Populations.getPopulations(self.canvas)
                 newPred = Predator(self.canvas, "predator")
-                newPred.setLocation(self.x+(4*random.randint(-1,1)), self.y+(4*random.randint(-1,1)))
+                newPred.setLocation(self.x+(12*math.cos(self.theta)), self.y+(12*math.sin(self.theta)))
+                newPred.theta = self.theta
                 pops.addPredator(newPred)
                 self.reproduceCount = 0
                 self.state = HUNTING
-                if self.energy >200: self.energy = 100
+                self.energy = 200
             
                     
     def collisions(self):
         pops = Population.Populations.getPopulations(self.canvas)
         for prey in pops.allPrey():
             # Eat the prey if within range
-            if self.distanceTo(prey) < 4:
-                self.energy += 65
+            if self.distanceTo(prey) < 10:
+                self.energy += 60
                 pops.destoryPrey(prey)
                 prey.delete()
                 return
+        for pred in pops.allPred():
+            if pred == self:
+                continue
+            if self.distanceTo(pred) < 14:
+                ang = self.angleTo(prey)
+                self.setLocation(self.x-WALK_SPEED*math.cos(ang),self.y-WALK_SPEED*math.sin(ang))
         
 
     def distanceTo(self, other):
@@ -91,14 +107,15 @@ class Predator():
 
 
     def draw(self):
+        """
         canvas = self.canvas
         canvas.delete(self.name)
         # Body
         bounds = [ 
-                   self.x-2,
-                   self.y-2,
-                   self.x+2,
-                   self.y+2
+                   self.x-8,
+                   self.y-8,
+                   self.x+8,
+                   self.y+8
         ]
         canvas.create_oval(bounds, fill="red", tags=self.name)
 
@@ -106,10 +123,11 @@ class Predator():
         line_bounds = [
             self.x,
             self.y,
-            self.x+6*math.cos(self.theta),
-            self.y+6*math.sin(self.theta)
+            self.x+12*math.cos(self.theta),
+            self.y+12*math.sin(self.theta)
         ]
         canvas.create_line(line_bounds,fill="red",tags=self.name)
+        """
 
     def setLocation(self, x, y):
         if (x > 1000):

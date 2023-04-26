@@ -25,14 +25,19 @@ def logicLoop(window, canvas, numberOfMoves):
     
     GlobalPrey.append(len(pops.allPrey()))
     GlobalPred.append(len(pops.allPred()))
-
-    numberOfMoves += 1
-    if (numberOfMoves > 1000):
+    if len(pops.allPred()) == 0 or len(pops.allPrey()) == 0:
         frame = pd.DataFrame({"Prey": GlobalPrey, "Predators": GlobalPred})
         frame.to_excel("data.xlsx")
         window.destroy()
         return
-    canvas.after(50,logicLoop, window, canvas, numberOfMoves)
+
+    numberOfMoves += 1
+    if (numberOfMoves > 3000):
+        frame = pd.DataFrame({"Prey": GlobalPrey, "Predators": GlobalPred})
+        frame.to_excel("data.xlsx")
+        window.destroy()
+        return
+    canvas.after(1,logicLoop, window, canvas, numberOfMoves)
 
 def initialise(window):
     window.resizable(False,False)
@@ -42,10 +47,10 @@ def initialise(window):
 
 def createCreatures(canvas):
     pops = Population.Populations.getPopulations(canvas)
-    for i in range(20):
+    for i in range(10):
         pops.addPredator(Predator.Predator(canvas, "predator"))
         
-    for i in range(200):
+    for i in range(50):
         pops.addPrey(PreyZero.Prey(canvas, "prey"))
 
 def main():

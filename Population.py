@@ -33,4 +33,8 @@ class Populations():
     
     def allPrey(self):
         return self.preyPop
+    
+    def reset(self):
+        self.preyPop = []
+        self.predatorPop = []
    
