@@ -53,7 +53,7 @@ class Predator():
                 if (self.distanceTo(prey) < closestDist):
                     target = prey
                     closestDist = self.distanceTo(prey)
-            if (closestDist > 50):
+            if (closestDist > 60):
                 self.theta += math.radians(random.randint(-ROTATION_SPEED, ROTATION_SPEED))
             else:
                 ang = self.angleTo(target)

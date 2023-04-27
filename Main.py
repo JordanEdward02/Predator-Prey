@@ -1,7 +1,8 @@
 # Main function that will run all of the experiments and create our findingsfrom playsound import playsound
 import tkinter as tk
 import Predator
-import PreyZero   
+import PreyZero
+import PreyLocal
 import Population  
 import pandas as pd
 
@@ -10,9 +11,11 @@ CANVAS_SIZE = 1000
 MAXIMUM_PASSES = 6000
 PASSES_NEEDED_FOR_VALIDITY = 4000
 
-def logicLoop(window, canvas, numberOfMoves):
-    GlobalPrey = []
-    GlobalPred = []
+ZERO_COMMUNICATION = 0
+LOCAL_COMMUNICATION = 1
+GLOBAL_COMMUNICATION = 2
+
+def logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType):
     pops = Population.Populations.getPopulations()
     for pred in pops.allPred():
         pred.move()
@@ -25,9 +28,10 @@ def logicLoop(window, canvas, numberOfMoves):
 
     for p in pops.allPrey():
         p.draw()
-    
+
     GlobalPrey.append(len(pops.allPrey()))
     GlobalPred.append(len(pops.allPred()))
+    
     if len(pops.allPred()) == 0 or len(pops.allPrey()) == 0:
         frame = pd.DataFrame({"Prey": GlobalPrey, "Predators": GlobalPred})
         frame.to_excel("data.xlsx")
@@ -37,11 +41,12 @@ def logicLoop(window, canvas, numberOfMoves):
     numberOfMoves += 1
     if (numberOfMoves > 3000):
         frame = pd.DataFrame({"Prey": GlobalPrey, "Predators": GlobalPred})
+        frame.to_excel("data.xlsx")
         window.destroy()
         return
-    canvas.after(1,logicLoop, window, canvas, numberOfMoves)
+    canvas.after(50,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
 
-def renderlessLoop(experimentNumber):
+def renderlessLoop(experimentNumber, preyType):
     GlobalPrey = []
     GlobalPred = []
     numberOfMoves = 0
@@ -52,6 +57,10 @@ def renderlessLoop(experimentNumber):
 
         for prey in pops.allPrey():
             prey.move()
+        
+        if (preyType != ZERO_COMMUNICATION):
+            for prey in pops.allPrey():
+                prey.clearComs()
 
         GlobalPrey.append(len(pops.allPrey()))
         GlobalPred.append(len(pops.allPred()))
@@ -68,33 +77,39 @@ def initialise(window):
     canvas.pack()
     return canvas
 
-def createCreatures(canvas):
+def createCreatures(canvas, preyType):
     pops = Population.Populations.getPopulations()
-    for i in range(10):
+    for i in range(20):
         pops.addPredator(Predator.Predator(canvas, "predator"))
-    for i in range(40):
-        pops.addPrey(PreyZero.Prey(canvas, "prey"))
+    for i in range(60):
+        if (preyType == ZERO_COMMUNICATION):
+            pops.addPrey(PreyZero.Prey(canvas, "prey"))
+        elif (preyType == LOCAL_COMMUNICATION):
+            pops.addPrey(PreyLocal.Prey(canvas, "prey"))
+            
 
-def main(rendered, numberOfExperiments):
+def main(rendered, numberOfExperiments, preyType):
     """
     Runs the experiements. If rendering, it will simply run a single parse, otherwise it will run numberOfExperiments times
     """
     currentExperiment = [0]
     outputFrame = pd.DataFrame()
     if rendered:
+        GlobalPrey = []
+        GlobalPred = []
         window = tk.Tk()
         canvas = initialise(window)
 
-        createCreatures(canvas)
+        createCreatures(canvas, preyType)
         numberOfMoves = 0
-        logicLoop(window, canvas, numberOfMoves)
+        logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
 
         window.mainloop()
     else:
         while (currentExperiment[0] < numberOfExperiments):
-            createCreatures(None)
-            findings = pd.DataFrame(renderlessLoop(currentExperiment))
+            createCreatures(None, preyType)
+            findings = pd.DataFrame(renderlessLoop(currentExperiment, preyType))
             outputFrame = pd.concat([outputFrame, findings], axis=1)
-        outputFrame.to_excel("data.xlsx")
+        outputFrame.to_excel("dataLocal.xlsx")
 
-main(rendered=False, numberOfExperiments=5)
+main(rendered=False, numberOfExperiments=10, preyType=LOCAL_COMMUNICATION)

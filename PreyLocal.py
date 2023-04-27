@@ -1,4 +1,4 @@
-# Model for the prey that have no  communication
+# Model for the prey that have local communication
 import random
 import math
 import Population
@@ -8,6 +8,12 @@ CANVAS_SIZE = 1000
 WANDERING = 0
 FLEEING = 1
 REPRODUCING = 2
+
+NORTH = -1
+SOUTH = 1
+
+EAST = 1
+WEST = -1
 
 WALK_SPEED = 4
 ROTATION_SPEED = 10
@@ -26,6 +32,7 @@ class Prey():
         self.state = WANDERING
         self.reproduceCount = 0
         self.reproduceDelay = random.randint(160,200) - (40 - len(Population.Populations.getPopulations().allPrey())/10)
+        self.coms = []
 
     def move(self):
         pops = Population.Populations.getPopulations()
@@ -43,7 +50,7 @@ class Prey():
                 if (self.distanceTo(pred) < closestDist):
                     target = pred
                     closestDist = self.distanceTo(pred)
-            if (closestDist > 50):
+            if (closestDist > 80):
                 self.state = WANDERING
             else:
                 ang = self.angleTo(target)
@@ -52,16 +59,62 @@ class Prey():
                         self.theta -= math.radians(ROTATION_SPEED)
                     else:
                         self.theta += math.radians(ROTATION_SPEED)
+                        
             self.theta = self.theta%(2.0*math.pi)
             self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
+            
+            """
+            This is our sending out of the communication. Doesn't use a full triple since this doesn't repeat through 
+            the prey, it just occurs once and any near enough hear.
+            """
+            for otherPrey in pops.allPrey():
+                if otherPrey == self:
+                    continue
+                if (self.distanceTo(otherPrey) < 80):
+                    targetTheta = math.atan2(otherPrey.y - self.y, otherPrey.x - self.x)
+                    if (abs(targetTheta) > (3.0*math.pi)/2):
+                        otherPrey.alert([EAST, 0])
+                    elif(targetTheta > math.pi/2):
+                        otherPrey.alert([0,NORTH])
+                    elif(targetTheta < -math.pi/2):
+                        otherPrey.alert([0,SOUTH])
+                    else:
+                        otherPrey.alert([WEST, 0])
 
         if (self.state == WANDERING):
-            self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
-            self.theta += random.randint(-ROTATION_SPEED, ROTATION_SPEED) * math.pi/180
             for pred in pops.allPred():
-                if (self.distanceTo(pred) < 30): 
-                    self.state = FLEEING            
-        
+                if (self.distanceTo(pred) < 80): 
+                    self.state = FLEEING         
+            if (self.state == WANDERING):
+                if (len(self.coms) > 0):
+                    """
+                    Communication for this localised version all have the same presedence since we are looking at most
+                    at a difference of 1 prey. 
+                    Therefore we find  the average and move away from that.
+                    Alternatively we could just move away from any random one.s
+                    """
+                    averageDir = [0,0]
+                    for com in self.coms:
+                        averageDir = [averageDir[0] + com[0], averageDir[1] + com[1]]
+                    oppositeTheta = math.atan2(averageDir[0], averageDir[1])
+                    relativeTheta = ((oppositeTheta - self.theta + math.pi) % (2.0*math.pi)) - math.pi
+                    if (abs(relativeTheta)<3.0):
+                        if (relativeTheta > 0):
+                            self.theta -= math.radians(ROTATION_SPEED)
+                        else:
+                            self.theta += math.radians(ROTATION_SPEED)
+                            
+                    self.theta = self.theta%(2.0*math.pi)
+                    self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
+
+                else:
+                    self.theta += random.randint(-ROTATION_SPEED, ROTATION_SPEED) * math.pi/180
+                    self.theta = self.theta%(2.0*math.pi)
+                    self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
+            else:
+                    self.theta += random.randint(-ROTATION_SPEED, ROTATION_SPEED) * math.pi/180
+                    self.theta = self.theta%(2.0*math.pi)
+                    self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
         self.collisions()
         if (self.state == REPRODUCING):
             self.reproduceCount += 1
@@ -74,15 +127,18 @@ class Prey():
                 self.reproduceCount = 0
                 self.reproduceDelay = random.randint(160,200) - len(Population.Populations.getPopulations().allPrey())/10
                 self.state = WANDERING
+        self.clearComs()
 
     def distanceTo(self, other):
         return math.sqrt( math.pow(self.x-other.x,2) + math.pow(self.y-other.y,2))
     
     def angleTo(self, other):
-        # Find the angle from our current direction to the other object in radians. [-pi, pi]
+        """
+        Find the angle from our current direction to the other object in radians. [-pi, pi]
+        """
         targetTheta = math.atan2(other.y - self.y, other.x - self.x)
-        returnTheta = ((targetTheta - self.theta + math.pi) % (2.0*math.pi)) - math.pi
-        return returnTheta
+        relativeTheta = ((targetTheta - self.theta + math.pi) % (2.0*math.pi)) - math.pi
+        return relativeTheta
     
     def collisions(self):
         pops = Population.Populations.getPopulations()
@@ -131,3 +187,9 @@ class Prey():
 
     def delete(self):
         if (self.canvas != None): self.canvas.delete(self.name)
+
+    def alert(self, dir):
+        self.coms.append(dir)
+
+    def clearComs(self):
+        self.coms.clear()
