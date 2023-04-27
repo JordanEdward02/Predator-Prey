@@ -3,17 +3,19 @@ import tkinter as tk
 import Predator
 import PreyZero
 import PreyLocal
+import PreyLocalEcho
 import Population  
 import pandas as pd
 
 CANVAS_SIZE = 1000
 
 MAXIMUM_PASSES = 6000
-PASSES_NEEDED_FOR_VALIDITY = 4000
+PASSES_NEEDED_FOR_VALIDITY = 2000
 
 ZERO_COMMUNICATION = 0
 LOCAL_COMMUNICATION = 1
-GLOBAL_COMMUNICATION = 2
+LOCAL_ECHO_COMMUNICATION = 2
+GLOBAL_COMMUNICATION = 3
 
 def logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType):
     pops = Population.Populations.getPopulations()
@@ -39,12 +41,12 @@ def logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType):
         return
 
     numberOfMoves += 1
-    if (numberOfMoves > 3000):
+    if (numberOfMoves > PASSES_NEEDED_FOR_VALIDITY):
         frame = pd.DataFrame({"Prey": GlobalPrey, "Predators": GlobalPred})
         frame.to_excel("data.xlsx")
         window.destroy()
         return
-    canvas.after(50,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
+    canvas.after(1,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
 
 def renderlessLoop(experimentNumber, preyType):
     GlobalPrey = []
@@ -86,6 +88,8 @@ def createCreatures(canvas, preyType):
             pops.addPrey(PreyZero.Prey(canvas, "prey"))
         elif (preyType == LOCAL_COMMUNICATION):
             pops.addPrey(PreyLocal.Prey(canvas, "prey"))
+        elif (preyType == LOCAL_ECHO_COMMUNICATION):
+            pops.addPrey(PreyLocalEcho.Prey(canvas, "prey"))
             
 
 def main(rendered, numberOfExperiments, preyType):
@@ -110,6 +114,6 @@ def main(rendered, numberOfExperiments, preyType):
             createCreatures(None, preyType)
             findings = pd.DataFrame(renderlessLoop(currentExperiment, preyType))
             outputFrame = pd.concat([outputFrame, findings], axis=1)
-        outputFrame.to_excel("dataLocal.xlsx")
+        outputFrame.to_excel("data" + str(preyType) + ".xlsx")
 
 main(rendered=False, numberOfExperiments=10, preyType=LOCAL_COMMUNICATION)
