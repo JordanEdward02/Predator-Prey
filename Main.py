@@ -4,6 +4,7 @@ import Predator
 import PreyZero
 import PreyLocal
 import PreyLocalEcho
+import PreyGlobal
 import Population  
 import pandas as pd
 
@@ -46,7 +47,7 @@ def logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType):
         frame.to_excel("data.xlsx")
         window.destroy()
         return
-    canvas.after(1,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
+    canvas.after(100,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
 
 def renderlessLoop(experimentNumber, preyType):
     GlobalPrey = []
@@ -90,6 +91,8 @@ def createCreatures(canvas, preyType):
             pops.addPrey(PreyLocal.Prey(canvas, "prey"))
         elif (preyType == LOCAL_ECHO_COMMUNICATION):
             pops.addPrey(PreyLocalEcho.Prey(canvas, "prey"))
+        else:
+            pops.addPrey(PreyGlobal.Prey(canvas, "prey"))
             
 
 def main(rendered, numberOfExperiments, preyType):
@@ -116,4 +119,4 @@ def main(rendered, numberOfExperiments, preyType):
             outputFrame = pd.concat([outputFrame, findings], axis=1)
         outputFrame.to_excel("data" + str(preyType) + ".xlsx")
 
-main(rendered=False, numberOfExperiments=10, preyType=LOCAL_COMMUNICATION)
+main(rendered=True, numberOfExperiments=10, preyType=GLOBAL_COMMUNICATION)

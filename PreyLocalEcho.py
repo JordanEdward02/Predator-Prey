@@ -1,4 +1,4 @@
-# Model for the prey that have local communication
+# Model for the prey that have local communication which echos through prey
 import random
 import math
 import Population
