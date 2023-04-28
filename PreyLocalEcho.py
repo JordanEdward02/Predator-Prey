@@ -23,10 +23,10 @@ ROTATION_SPEED = 10
 class Prey():
     count = 0
 
-    def __init__(self,canvas,name):
-        self.x = random.randint(10,CANVAS_SIZE-10)
-        self.y = random.randint(10,CANVAS_SIZE-10)
-        self.theta = random.uniform(0.0,2.0*math.pi)
+    def __init__(self,canvas,name, x, y, theta):
+        self.x = x
+        self.y = y
+        self.theta = theta
         self.reproduceTimer = 0
         self.canvas = canvas
         self.name = name + str(Prey.count)
@@ -137,9 +137,7 @@ class Prey():
         if (self.state == REPRODUCING):
             self.reproduceCount += 1
             if self.reproduceCount > 10:
-                newPrey = Prey(self.canvas, "prey")
-                newPrey.setLocation(self.x+(8*math.cos(self.theta)), self.y+(8*math.sin(self.theta)))
-                newPrey.theta = self.theta
+                newPrey = Prey(self.canvas, "prey",self.x+(24*math.cos(self.theta)), self.y+(24*math.sin(self.theta)), self.theta)
                 pops.addPrey(newPrey)
                 self.reproduceTimer = 0
                 self.reproduceCount = 0

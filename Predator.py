@@ -15,10 +15,10 @@ ROTATION_SPEED = 10
 class Predator():
     count = 0
 
-    def __init__(self,canvas,name):
-        self.x = random.randint(10,CANVAS_SIZE-10)
-        self.y = random.randint(10,CANVAS_SIZE-10)
-        self.theta = random.uniform(0.0,2.0*math.pi)
+    def __init__(self,canvas,name, x, y, theta):
+        self.x = x
+        self.y = y
+        self.theta = theta
         self.energy = random.randint(70,130) + 60 - len(Population.Populations.getPopulations().allPred())*3
         self.canvas = canvas
         self.name = name + str(Predator.count)
@@ -69,9 +69,7 @@ class Predator():
         
         if (self.state == REPRODUCING):
             pops = Population.Populations.getPopulations()
-            newPred = Predator(self.canvas, "predator")
-            newPred.setLocation(self.x+(12*math.cos(self.theta)), self.y+(12*math.sin(self.theta)))
-            newPred.theta = self.theta
+            newPred = Predator(self.canvas, "predator", self.x+(24*math.cos(self.theta)), self.y+(24*math.sin(self.theta)), self.theta)
             pops.addPredator(newPred)
             self.state = HUNTING
             self.energy = random.randint(70,130) + 60 - len(Population.Populations.getPopulations().allPred())*3
