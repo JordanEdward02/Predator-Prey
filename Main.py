@@ -6,6 +6,7 @@ import PreyLocal
 import PreyLocalEcho
 import PreyGlobal
 import Population  
+import time
 import pandas as pd
 
 CANVAS_SIZE = 1000
@@ -47,7 +48,7 @@ def logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType):
         frame.to_excel("data.xlsx")
         window.destroy()
         return
-    canvas.after(100,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
+    canvas.after(300,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
 
 def renderlessLoop(experimentNumber, preyType):
     GlobalPrey = []
@@ -61,7 +62,7 @@ def renderlessLoop(experimentNumber, preyType):
         for prey in pops.allPrey():
             prey.move()
         
-        if (preyType != ZERO_COMMUNICATION):
+        if (preyType == LOCAL_COMMUNICATION or preyType == LOCAL_ECHO_COMMUNICATION):
             for prey in pops.allPrey():
                 prey.clearComs()
 
@@ -99,6 +100,9 @@ def main(rendered, numberOfExperiments, preyType):
     """
     Runs the experiements. If rendering, it will simply run a single parse, otherwise it will run numberOfExperiments times
     """
+    t = time.localtime()
+    current_time = time.strftime("%H:%M:%S", t)
+    print(current_time)
     currentExperiment = [0]
     outputFrame = pd.DataFrame()
     if rendered:
@@ -119,4 +123,4 @@ def main(rendered, numberOfExperiments, preyType):
             outputFrame = pd.concat([outputFrame, findings], axis=1)
         outputFrame.to_excel("data" + str(preyType) + ".xlsx")
 
-main(rendered=True, numberOfExperiments=10, preyType=GLOBAL_COMMUNICATION)
+main(rendered=True, numberOfExperiments=10, preyType=LOCAL_ECHO_COMMUNICATION)

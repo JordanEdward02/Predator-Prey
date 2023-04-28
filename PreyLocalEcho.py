@@ -103,11 +103,11 @@ class Prey():
                     since we can assume that predator is the biggest threat
                     """
                     chosenDir = []
-                    chosenDist = 1001
+                    chosenDist = 2000
                     for com in self.coms:
                         if com[0] + com[1] < chosenDist:
                             chosenDir = com
-                    oppositeTheta = math.atan2(chosenDir[0], chosenDir[1])
+                    oppositeTheta = math.atan2(chosenDir[1], chosenDir[0])
                     """
                     # THESE PRINTS SHOW THE CHAINS OF DIRECTION AND THE RESULT OF THE ECHOING COMMUNICATION
                     print("GOING THROUGH: ")

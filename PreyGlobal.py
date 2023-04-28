@@ -1,13 +1,11 @@
 # Model for the prey that have global communication
 
-
 """
-Need a new idea for mapping this blackboard because this is exactly the same as the echoing local in theory.
+Since this is much more of an unrealistic concept for the agents, we take it to the extreme.
+Agents know where they are (which is not an unfair assumption since animals learn their surroundings)
 
-Otherwise we can just say locations with their message in the blackboard? 
-Not very realistic from a biological standpoint since creatures don't know where they are like that.
-Maybe we could justify it if creatures know where they are based on local landmarks?? I guess find a reference for if
-animals are aware of their surroundings.
+They can then post their location to the blackboard when then see a predator 
+Prey which are just wandering can then know the locations of all their fleeing comrade are move away from the closest  
 """
 import random
 import math
@@ -18,11 +16,6 @@ CANVAS_SIZE = 1000
 WANDERING = 0
 FLEEING = 1
 REPRODUCING = 2
-
-NORTH = 0
-SOUTH = 1
-EAST = 2
-WEST = 3
 
 PERCEPTION_DISTANCE = 80
 
@@ -54,54 +47,17 @@ class Prey():
 
         if self.reproduceTimer > self.reproduceDelay: 
             self.state = REPRODUCING
-            
-        """
-        We post alerts to our blackboard here based on the connections between our prey and any nearby agents.
-        These are triples using the python dictionary
-        "currentPrey" : [[Direction, otherAgent], [Direction, otherAgent], ... []]
-        
-        should be interpreted as [currentPrey, Direction, OtherAgent]
-        Dictionary is just used to keep it organised and quick
-
-        When an agent comes to add new parts to this dictionary, we clear it because we don't want all the old alerts to be present
-        """
-        Prey.blackboard[self] = []
-
-        for otherPrey in pops.allPrey():
-            if otherPrey == self:
-                continue
-            if (self.distanceTo(otherPrey) < PERCEPTION_DISTANCE):
-                targetTheta = math.atan2(otherPrey.y - self.y, otherPrey.x - self.x)
-                if (abs(targetTheta) > (3.0*math.pi)/2): 
-                    Prey.blackboard[self].append([EAST, otherPrey]) # For the direction, we use the opposite since it is to be intepreted by the reciever
-                elif(targetTheta > math.pi/2):
-                    Prey.blackboard[self].append([NORTH, otherPrey])
-                elif(targetTheta < -math.pi/2):
-                    Prey.blackboard[self].append([SOUTH, otherPrey])
-                else:
-                    Prey.blackboard[self].append([WEST, otherPrey])
-        for otherPred in pops.allPred():
-            if (self.distanceTo(otherPred) < PERCEPTION_DISTANCE):
-                targetTheta = math.atan2(otherPred.y - self.y, otherPred.x - self.x)
-                if (abs(targetTheta) > (3.0*math.pi)/2): 
-                    Prey.blackboard[self].append([EAST, otherPred])
-                elif(targetTheta > math.pi/2):
-                    Prey.blackboard[self].append([NORTH, otherPred])
-                elif(targetTheta < -math.pi/2):
-                    Prey.blackboard[self].append([SOUTH, otherPred])
-                else:
-                    Prey.blackboard[self].append([WEST, otherPred])
 
         """
-        Here we need to trace our knowledge graph
+        Here we post the alerts that our current prey is fleeing from a predator.
+        We post the prey name (so we can remove it later) and the location
         """
-        #print(Prey.blackboard[self])
 
         if (self.state == FLEEING):
             if (len(pops.allPred()) == 0): 
                 return
             target = pops.allPred()[0]
-            closestDist = 1000
+            closestDist = 2000
             for pred in pops.allPred():
                 if (self.distanceTo(pred) < closestDist):
                     target = pred
@@ -115,16 +71,43 @@ class Prey():
                         self.theta -= math.radians(ROTATION_SPEED)
                     else:
                         self.theta += math.radians(ROTATION_SPEED)
+            Prey.blackboard[self.name] = [self.x, self.y] # Alerts that this prey has seen a predator
             self.theta = self.theta%(2.0*math.pi)
             self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
 
         if (self.state == WANDERING):
-            for pred in pops.allPred():
-                if (self.distanceTo(pred) < PERCEPTION_DISTANCE): 
-                    self.state = FLEEING
-            self.theta += random.randint(-ROTATION_SPEED, ROTATION_SPEED) * math.pi/180
+            if (self.name in Prey.blackboard): Prey.blackboard.pop(self.name)
+            """
+            Here we find the nearest alert from another prey that is fleeing and move away from that. 
+            We are assuming the closest alert is the most potentially dangerous to us, which is a fiar assumption
+             and it works off the location of the prey since this is more realistic to be sharable between prey then the location of 
+             the predator which we are evading
+            """
+            nearestAlertDistance = 1000.0
+            nearestAlertLocation = [] 
+            for alertLocation in Prey.blackboard.items():
+                dist = math.sqrt( math.pow(self.x-alertLocation[1][0],2) + math.pow(self.y-alertLocation[1][1],2))
+                if (dist < nearestAlertDistance):
+                    nearestAlertLocation = alertLocation[1]
+            if (nearestAlertLocation != []):
+                targetTheta = math.atan2(nearestAlertLocation[1] - self.y, nearestAlertLocation[0] - self.x)
+                relativeTheta = ((targetTheta - self.theta + math.pi) % (2.0*math.pi)) - math.pi
+                if (abs(relativeTheta)<3.0):
+                    if (relativeTheta > 0):
+                        self.theta -= math.radians(ROTATION_SPEED)
+                    else:
+                        self.theta += math.radians(ROTATION_SPEED)
+            else:
+                self.theta += random.randint(-ROTATION_SPEED, ROTATION_SPEED) * math.pi/180
             self.theta = self.theta%(2.0*math.pi)
             self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
+            for allPred in pops.allPred():
+                if (self.distanceTo(allPred) < PERCEPTION_DISTANCE):
+                    self.state = FLEEING
+                    break
+            
+            if (self.name in Prey.blackboard): Prey.blackboard.pop(self.name)
+            
 
         self.collisions()
 
@@ -182,6 +165,15 @@ class Prey():
             self.y+16*math.sin(self.theta)
         ]
         canvas.create_line(line_bounds,fill="green",tags=self.name)
+
+        if (self.name in Prey.blackboard):
+            bounds = [ 
+                    self.x-80,
+                    self.y-80,
+                    self.x+80,
+                    self.y+80
+            ]
+            canvas.create_oval(bounds, width = "1", tags=self.name)
         
 
     def setLocation(self, x, y):
@@ -197,5 +189,5 @@ class Prey():
         self.y = y
 
     def delete(self):
-        if (self in Prey.blackboard): Prey.blackboard.pop(self)
+        if (self.name in Prey.blackboard): Prey.blackboard.pop(self.name)
         if (self.canvas != None): self.canvas.delete(self.name)
