@@ -16,6 +16,7 @@ EAST = 1
 WEST = -1
 
 PERCEPTION_DISTANCE = 80
+MAX_ECHO_DEPTH = 5
 
 WALK_SPEED = 4
 ROTATION_SPEED = 10
@@ -34,7 +35,7 @@ class Prey():
         self.state = WANDERING
         self.reproduceCount = 0
         self.reproduceDelay = random.randint(160,200) - (40 - len(Population.Populations.getPopulations().allPrey())/10)
-        self.coms = []
+        self.coms = [] # [NorthDirection, SouthDirection, ]
 
     def move(self):
         pops = Population.Populations.getPopulations()
@@ -108,13 +109,6 @@ class Prey():
                         if com[0] + com[1] < chosenDist:
                             chosenDir = com
                     oppositeTheta = math.atan2(chosenDir[1], chosenDir[0])
-                    """
-                    # THESE PRINTS SHOW THE CHAINS OF DIRECTION AND THE RESULT OF THE ECHOING COMMUNICATION
-                    print("GOING THROUGH: ")
-                    for name in chosenDir[2]:
-                        print(" | " + str(name.name))
-                    print("With direction: " + str(math.degrees(oppositeTheta)))
-                    """
                     relativeTheta = ((oppositeTheta - self.theta + math.pi) % (2.0*math.pi)) - math.pi
                     if (abs(relativeTheta)<3.0):
                         if (relativeTheta > 0):
@@ -214,6 +208,8 @@ class Prey():
         Each alert is depth first through the prey, so when we have lots of echos the approzimations become more extreme since it only uses 
         North East South West as directions. 
         """
+        if (len(dir[2]) > MAX_ECHO_DEPTH): return
+        dir[2] = dir[2] + [self]
         self.coms.append(dir)
         alreadyAlerted = dir[2]
         for otherPrey in Population.Populations.getPopulations().allPrey():
@@ -222,13 +218,13 @@ class Prey():
             if (self.distanceTo(otherPrey) < PERCEPTION_DISTANCE):
                 targetTheta = math.atan2(otherPrey.y - self.y, otherPrey.x - self.x)
                 if (abs(targetTheta) > (3.0*math.pi)/2): 
-                    otherPrey.alert([dir[0] + EAST, dir[1], dir[2] + [self]]) # For the direction, we use the opposite since it is to be intepreted by the reciever
+                    otherPrey.alert([dir[0] + EAST, dir[1], dir[2]]) # For the direction, we use the opposite since it is to be intepreted by the reciever
                 elif(targetTheta > math.pi/2):
-                    otherPrey.alert([dir[0], dir[1] + NORTH, dir[2] + [self]])
+                    otherPrey.alert([dir[0], dir[1] + NORTH, dir[2]])
                 elif(targetTheta < -math.pi/2):
-                    otherPrey.alert([dir[0],dir[1] + SOUTH, dir[2] + [self]])
+                    otherPrey.alert([dir[0],dir[1] + SOUTH, dir[2]])
                 else:
-                    otherPrey.alert([dir[0] + WEST, dir[1], dir[2] + [self]])
+                    otherPrey.alert([dir[0] + WEST, dir[1], dir[2]])
 
 
     def clearComs(self):

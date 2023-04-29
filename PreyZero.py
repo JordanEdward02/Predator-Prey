@@ -29,7 +29,6 @@ class Prey():
 
     def move(self):
         pops = Population.Populations.getPopulations()
-
     
         # Reproduce counter always goes up
         self.reproduceTimer += 1
