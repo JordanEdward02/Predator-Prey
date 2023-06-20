@@ -71,7 +71,7 @@ class Prey():
                         self.theta -= math.radians(ROTATION_SPEED)
                     else:
                         self.theta += math.radians(ROTATION_SPEED)
-            Prey.blackboard[self.name] = [self.x, self.y] # Alerts that this prey has seen a predator
+                Prey.blackboard[self.name] = [target.x, target.y] # Alerts that this prey has seen a predator
             self.theta = self.theta%(2.0*math.pi)
             self.setLocation(self.x+WALK_SPEED*math.cos(self.theta),self.y+WALK_SPEED*math.sin(self.theta))
 

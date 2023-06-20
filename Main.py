@@ -53,10 +53,13 @@ def logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType):
     canvas.after(1,logicLoop, window, canvas, numberOfMoves, GlobalPrey, GlobalPred, preyType)
 
 def renderlessLoop(experimentNumber, preyType):
+    """
+    Runs a single pass of the simulation with the specified prey type
+    """
     GlobalPrey = []
     GlobalPred = []
     numberOfMoves = 0
-    print("TYPE: " + str(preyType))
+    #print("TYPE: " + str(preyType))
     pops = Population.Populations.getPopulations()
     while(numberOfMoves < MAXIMUM_PASSES and len(pops.allPred()) > 0 and len(pops.allPrey()) > 0):
         for pred in pops.allPred():
@@ -69,12 +72,12 @@ def renderlessLoop(experimentNumber, preyType):
         GlobalPred.append(len(pops.allPred()))
 
         numberOfMoves += 1
-    preyCount = len(pops.allPrey())
+    agentCounts = pd.DataFrame({"Prey"+str(preyType): len(pops.allPrey()), "Predator"+str(preyType): len(pops.allPred())}, index = [0])
     if numberOfMoves > PASSES_NEEDED_FOR_VALIDITY:
         print("Successful experiment: " + str(experimentNumber[0]))
         experimentNumber[0] += 1
-        return {"Prey" + str(experimentNumber): GlobalPrey, "Predators" + str(experimentNumber): GlobalPred}, preyCount
-    return None, preyCount
+        return {"Prey" + str(experimentNumber): GlobalPrey, "Predators" + str(experimentNumber): GlobalPred}, agentCounts
+    return None, agentCounts
 
 def initialise(window):
     window.resizable(False,False)
@@ -83,6 +86,9 @@ def initialise(window):
     return canvas
 
 def createCreatures(canvas, preyType):
+    """
+    Creates the creatures in Population.py 
+    """
     pops = Population.Populations.getPopulations()
     pops.reset()
     for _ in range(20):
@@ -113,30 +119,28 @@ def main(rendered, numberOfExperiments):
     print(current_time)
     currentExperiment = [0]
     attemptNumber = 0
-    
-    outputFrameZero = pd.DataFrame()
-    outputFrameLocal = pd.DataFrame()
-    outputFrameLocalEcho = pd.DataFrame()
-    outputFrameGlobal = pd.DataFrame()
-
-    zeroPreyCount = []
-    localPreyCount = []
-    localEchoPreyCount = []
-    globalPreyCount = []
 
     if rendered:
-        while(True):
-            GlobalPrey = []
-            GlobalPred = []
-            window = tk.Tk()
-            canvas = initialise(window)
+        GlobalPrey = []
+        GlobalPred = []
+        window = tk.Tk()
+        canvas = initialise(window)
 
-            createCreatures(canvas, LOCAL_ECHO_COMMUNICATION)
-            numberOfMoves = 0
-            logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, LOCAL_ECHO_COMMUNICATION)
+        createCreatures(canvas, LOCAL_ECHO_COMMUNICATION)
+        numberOfMoves = 0
+        logicLoop(window, canvas, numberOfMoves, GlobalPrey, GlobalPred, LOCAL_ECHO_COMMUNICATION)
 
-            window.mainloop()
+        window.mainloop()
     else:
+        outputFrameZero = pd.DataFrame()
+        outputFrameLocal = pd.DataFrame()
+        outputFrameLocalEcho = pd.DataFrame()
+        outputFrameGlobal = pd.DataFrame()
+
+        zeroagentCounts = pd.DataFrame()
+        localagentCounts = pd.DataFrame()
+        localEchoagentCounts = pd.DataFrame()
+        globalagentCounts = pd.DataFrame()
         while (attemptNumber < numberOfExperiments):
             """
             Uses the same seed in all 4 experiments so we can accurately conclude how the behaviour impacts the populations and stability
@@ -146,42 +150,38 @@ def main(rendered, numberOfExperiments):
             for preyType in range(4):
                 random.seed(seed)
                 createCreatures(None, preyType)
-                findings, preyCount = renderlessLoop(currentExperiment, preyType)
+                """
+                Stores the data in the correct place based on the prey type
+                """
+                findings, agentCounts = renderlessLoop(currentExperiment, preyType)
                 if (findings != None):
                     if (preyType == ZERO_COMMUNICATION):
                         outputFrameZero = pd.concat([outputFrameZero, pd.DataFrame(findings)], axis=1)
-                        zeroPreyCount.append(preyCount)
                     if (preyType == LOCAL_COMMUNICATION):
                         outputFrameLocal = pd.concat([outputFrameLocal, pd.DataFrame(findings)], axis=1)
-                        localPreyCount.append(preyCount)
                     if (preyType == LOCAL_ECHO_COMMUNICATION):
                         outputFrameLocalEcho = pd.concat([outputFrameLocalEcho, pd.DataFrame(findings)], axis=1)
-                        localEchoPreyCount.append(preyCount)
                     if (preyType == GLOBAL_COMMUNICATION):
                         outputFrameGlobal = pd.concat([outputFrameGlobal, pd.DataFrame(findings)], axis=1)
-                        globalPreyCount.append(preyCount)
                 
                 if (preyType == ZERO_COMMUNICATION):
-                    zeroPreyCount.append(preyCount)
+                    zeroagentCounts = pd.concat([zeroagentCounts, agentCounts])
                 if (preyType == LOCAL_COMMUNICATION):
-                    localPreyCount.append(preyCount)
+                    localagentCounts = pd.concat([localagentCounts, agentCounts])
                 if (preyType == LOCAL_ECHO_COMMUNICATION):
-                    localEchoPreyCount.append(preyCount)
+                    localEchoagentCounts = pd.concat([localEchoagentCounts, agentCounts])
                 if (preyType == GLOBAL_COMMUNICATION):
-                    globalPreyCount.append(preyCount)
+                    globalagentCounts = pd.concat([globalagentCounts, agentCounts])
             attemptNumber += 1
             print(str(attemptNumber))
         outputFrameZero.to_excel("stableZero.xlsx")
         outputFrameLocal.to_excel("stableLocal.xlsx")
         outputFrameLocalEcho.to_excel("stableLocalEcho.xlsx")
         outputFrameGlobal.to_excel("stableGlobal.xlsx")
+
+        endingPopulations = pd.concat([zeroagentCounts, localagentCounts, localEchoagentCounts, globalagentCounts], axis=1)
+        endingPopulations.to_excel("endingPopulations.xlsx")
         
         print("COLUMNS(): " + str(outputFrameLocal.columns.size/2))
-        if (len(zeroPreyCount)>0): print(str(sum(zeroPreyCount)/len(zeroPreyCount)))
-        if (len(localPreyCount)>0): print(str(sum(localPreyCount)/len(localPreyCount)))
-        if (len(localEchoPreyCount)>0): print(str(sum(localEchoPreyCount)/len(localEchoPreyCount)))
-        if (len(globalPreyCount)>0): print(str(sum(globalPreyCount)/len(globalPreyCount)))
 
-
-
-main(rendered=False, numberOfExperiments=20)
+main(rendered=False, numberOfExperiments=300)

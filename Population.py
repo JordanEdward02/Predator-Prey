@@ -1,5 +1,4 @@
 # Class to maintain the populations over time of the predators and prey
-from matplotlib import pyplot as plt
 
 class Populations():
     this = None    
@@ -7,7 +6,6 @@ class Populations():
         # Count the populations of the prey and predators as we run the simulation. Get these to be plot in real time.
         self.preyPop = []
         self.predatorPop = []
-        # Needs the item to count to be plotted on the graph
 
         
     def getPopulations():

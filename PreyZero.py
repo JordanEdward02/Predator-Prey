@@ -42,7 +42,7 @@ class Prey():
                 if (self.distanceTo(pred) < closestDist):
                     target = pred
                     closestDist = self.distanceTo(pred)
-            if (closestDist > 50):
+            if (closestDist > 80):
                 self.state = WANDERING
             else:
                 ang = self.angleTo(target)

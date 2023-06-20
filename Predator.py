@@ -45,7 +45,10 @@ class Predator():
                 self.state = REPRODUCING
                 return
             
-            # Find the nearest prey and move towards it
+            """
+            Pursue prey if within range
+            This is like another state
+            """
             if (len(pops.allPrey()) == 0): return
             target = pops.allPrey()[0]
             closestDist = 1000
